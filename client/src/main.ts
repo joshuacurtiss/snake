@@ -1,5 +1,6 @@
 import kaboom, {
     AreaComp,
+    ColorComp,
     GameObj,
     PosComp,
     RectComp,
@@ -14,9 +15,11 @@ const {
     destroy,
     destroyAll,
     dt,
+    onCollide,
     onKeyPress,
     onUpdate,
     pos,
+    rand,
     rect,
     vec2,
     UP,
@@ -47,7 +50,9 @@ const directions: Record<Direction, Vec2> = {
 let current_direction: Direction = Direction.Right;
 let run_action = false;
 let snake_body: GameObj<AreaComp & PosComp & RectComp>[] = [];
+let snake_len = SNAKE_SPAWN_LENGTH;
 let timer = 0;
+let food: GameObj<RectComp & ColorComp & PosComp & AreaComp> | null = null;
 
 addLevel([
     '##############',
@@ -88,15 +93,30 @@ function addSnakeBody(coord: Vec2) {
 function respawnSnake() {
     destroyAll('snake');
     snake_body = [];
-    for (let i = 1; i <= SNAKE_SPAWN_LENGTH; i += 1) {
+    snake_len = SNAKE_SPAWN_LENGTH;
+    for (let i = 1; i <= snake_len; i += 1) {
         snake_body.push(addSnakeBody(vec2(BLOCK_SIZE, BLOCK_SIZE * i)));
     }
     current_direction = Direction.Right;
+}
+function respawnFood() {
+    const foodPos = rand(vec2(1, 1), vec2(13, 13));
+    foodPos.x = Math.floor(foodPos.x);
+    foodPos.y = Math.floor(foodPos.y);
+    if (food) destroy(food);
+    food = add([
+        rect(BLOCK_SIZE, BLOCK_SIZE),
+        color(0, 255, 0),
+        pos(foodPos.scale(BLOCK_SIZE)),
+        area(),
+        'food',
+    ]);
 }
 function respawnAll() {
     run_action = false;
     wait(0.5, () => {
         respawnSnake();
+        respawnFood();
         run_action = true;
     });
 }
@@ -119,17 +139,23 @@ onKeyPress(Direction.Right, () => {
     if (current_direction !== Direction.Left) current_direction = Direction.Right;
 });
 
+onCollide('snake', 'food', () => {
+    snake_len += 1;
+    respawnFood();
+});
+
 onUpdate(() => {
     if (!run_action) return;
     timer += dt();
     if (timer < MOVE_DELAY) return;
     timer = 0;
-
     const move = directions[current_direction];
     const snake_head = snake_body[snake_body.length - 1];
     snake_body.push(addSnakeBody(snake_head.pos.add(move)));
-    const snake_tail = snake_body.shift();
-    if (snake_tail) destroy(snake_tail);
+    if (snake_len < snake_body.length) {
+        const snake_tail = snake_body.shift();
+        if (snake_tail) destroy(snake_tail);
+    }
 });
 
 // Init
