@@ -21,6 +21,7 @@ const {
     pos,
     rand,
     rect,
+    shake,
     vec2,
     UP,
     DOWN,
@@ -114,11 +115,16 @@ function respawnFood() {
 }
 function respawnAll() {
     run_action = false;
-    wait(0.5, () => {
+    wait(1, () => {
         respawnSnake();
         respawnFood();
         run_action = true;
     });
+}
+function die() {
+    run_action = false;
+    shake(12);
+    respawnAll();
 }
 
 // Events
@@ -143,6 +149,9 @@ onCollide('snake', 'food', () => {
     snake_len += 1;
     respawnFood();
 });
+
+onCollide('snake', 'wall', die);
+onCollide('snake', 'snake', die);
 
 onUpdate(() => {
     if (!run_action) return;
