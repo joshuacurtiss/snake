@@ -1,4 +1,11 @@
 .cache
+.hathora
 dist
 node_modules
 test*
+.env
+/api
+/data/*
+!/data/saves
+/client/prototype-ui/*
+!/client/prototype-ui/plugins

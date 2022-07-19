@@ -17,6 +17,7 @@ module.exports = {
     rules: {
         indent: ['error', 4],
         camelcase: 'off',
+        'max-len': ['error', { code: 120 }],
         'no-shadow': 'off',
         '@typescript-eslint/no-shadow': ['error'],
         'no-unused-vars': 'off',
